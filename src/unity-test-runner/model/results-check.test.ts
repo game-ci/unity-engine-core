@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll, test } from 'vitest';
-import fs from 'fs';
+import * as fs from 'fs';
 import os from 'os';
 import path from 'path';
 import ResultsCheck from './results-check';
@@ -33,6 +33,11 @@ describe('ResultsCheck', () => {
         // Larger than the 4KB bounded read, with the non-NUnit content
         // confined to the start of the file - proves the check doesn't need
         // to read (or match against) the whole file to reach this verdict.
+        // (Can't spy on fs.readSync directly to assert the 4096 byte length:
+        // vitest/ESM refuses to spy on node:fs's exports - "Module namespace
+        // is not configurable in ESM" - so this asserts the same guarantee
+        // behaviorally instead: the parser, which needs the full file, is
+        // never invoked.)
         const filler = 'x'.repeat(8192);
         fs.writeFileSync(path.join(artifactsPath, 'not-nunit.xml'), `<not-a-test-run/>${filler}`);
 
