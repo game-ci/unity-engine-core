@@ -57,13 +57,28 @@ const ResultsCheck = {
             if (!filepath.endsWith('.xml'))
                 return;
             core.info(`Processing file ${filepath}...`);
+            const filePath = path_1.default.join(artifactsPath, filepath);
             try {
-                const content = fs.readFileSync(path_1.default.join(artifactsPath, filepath), 'utf8');
-                if (!content.includes('<test-run')) {
-                    // noinspection ExceptionCaughtLocallyJS
-                    throw new Error('File does not appear to be a NUnit XML file');
+                // Only read the first 4KB to check for the <test-run> tag instead
+                // of reading the whole file - avoids unnecessary I/O on large
+                // result files and on non-NUnit XML files sitting in the
+                // artifacts directory (game-ci/unity-test-runner#288).
+                const bufferSize = 4096;
+                const buffer = Buffer.alloc(bufferSize);
+                const fd = fs.openSync(filePath, 'r');
+                let bytesRead;
+                try {
+                    bytesRead = fs.readSync(fd, buffer, 0, bufferSize, 0);
                 }
-                const fileData = await results_parser_1.default.parseResults(path_1.default.join(artifactsPath, filepath));
+                finally {
+                    fs.closeSync(fd);
+                }
+                const contentStart = buffer.toString('utf8', 0, bytesRead);
+                if (!contentStart.includes('<test-run')) {
+                    core.warning(`File does not appear to be a NUnit XML file: ${filepath}`);
+                    return;
+                }
+                const fileData = await results_parser_1.default.parseResults(filePath);
                 core.info(fileData.summary);
                 runs.push(fileData);
             }
