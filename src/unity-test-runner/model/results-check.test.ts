@@ -45,7 +45,11 @@ describe('ResultsCheck', () => {
       } finally {
         fs.rmSync(artifactsPath, { recursive: true, force: true });
         vi.restoreAllMocks();
-        process.env['GITHUB_REPOSITORY'] = originalRepository;
+        if (originalRepository === undefined) {
+          delete process.env['GITHUB_REPOSITORY'];
+        } else {
+          process.env['GITHUB_REPOSITORY'] = originalRepository;
+        }
       }
     });
 
@@ -80,7 +84,11 @@ describe('ResultsCheck', () => {
       } finally {
         fs.rmSync(artifactsPath, { recursive: true, force: true });
         vi.restoreAllMocks();
-        process.env['GITHUB_REPOSITORY'] = originalRepository;
+        if (originalRepository === undefined) {
+          delete process.env['GITHUB_REPOSITORY'];
+        } else {
+          process.env['GITHUB_REPOSITORY'] = originalRepository;
+        }
       }
     });
   });
