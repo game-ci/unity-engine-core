@@ -28,18 +28,21 @@ describe('ResultsCheck', () => {
       vi.spyOn(ResultsCheck, 'renderSummary').mockResolvedValue('summary');
       vi.spyOn(ResultsCheck, 'renderDetails').mockResolvedValue('details');
       const parseResultsSpy = vi.spyOn(ResultsParser, 'parseResults');
+      // vitest/ESM refuses to spy on node:fs's own exports directly
+      // ("Module namespace is not configurable in ESM"), so the bounded
+      // read is exposed as its own ResultsCheck.readFileHead method
+      // specifically so this can spy on (and assert the exact byte bound
+      // requested by) the real implementation, not just its end result.
+      const readFileHeadSpy = vi.spyOn(ResultsCheck, 'readFileHead');
 
       try {
         // Larger than the 4KB bounded read, with the non-NUnit content
-        // confined to the start of the file - proves the check doesn't need
-        // to read (or match against) the whole file to reach this verdict.
-        // (Can't spy on fs.readSync directly to assert the 4096 byte length:
-        // vitest/ESM refuses to spy on node:fs's exports - "Module namespace
-        // is not configurable in ESM" - so this asserts the same guarantee
-        // behaviorally instead: the parser, which needs the full file, is
-        // never invoked.)
+        // confined to the start of the file - a full-file read would find
+        // the same content either way, so this alone doesn't prove
+        // boundedness; the readFileHeadSpy assertion below does.
         const filler = 'x'.repeat(8192);
-        fs.writeFileSync(path.join(artifactsPath, 'not-nunit.xml'), `<not-a-test-run/>${filler}`);
+        const filePath = path.join(artifactsPath, 'not-nunit.xml');
+        fs.writeFileSync(filePath, `<not-a-test-run/>${filler}`);
 
         await ResultsCheck.createCheck(artifactsPath, 'fake-token', 'Test Results');
 
@@ -47,6 +50,7 @@ describe('ResultsCheck', () => {
           expect.stringContaining('File does not appear to be a NUnit XML file: not-nunit.xml'),
         );
         expect(parseResultsSpy).not.toHaveBeenCalled();
+        expect(readFileHeadSpy).toHaveBeenCalledWith(filePath, 4096);
       } finally {
         fs.rmSync(artifactsPath, { recursive: true, force: true });
         vi.restoreAllMocks();
