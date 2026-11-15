@@ -1,5 +1,24 @@
 # unity-engine-core
 
+> [!IMPORTANT]
+> **This repository is archived.** `unity-engine-core` has moved in-repo to
+> [`game-ci/cli`](https://github.com/game-ci/cli), under
+> [`plugins/unity/`](https://github.com/game-ci/cli/tree/main/plugins/unity) —
+> brought in via `git subtree` with full commit history preserved, not a
+> squashed copy. It keeps its own build and its own test suite; nothing about
+> *how* it works has changed, only *where* it lives.
+>
+> Note: as of the move, `plugins/unity/` is **not yet wired into** `cli`'s
+> shipping Unity plugin (`src/plugin/builtin/unity-plugin.ts`) — the two
+> implementations coexist and neither imports the other. Reconciling them is
+> tracked as a follow-up in `game-ci/cli`'s
+> [`docs/architecture/plugin-interface.md`](https://github.com/game-ci/cli/blob/main/docs/architecture/plugin-interface.md).
+> See [game-ci/cli#78](https://github.com/game-ci/cli/pull/78) for the full
+> rationale and what moved.
+>
+> Please open issues and PRs against `game-ci/cli` going forward — this repo
+> is read-only and will not receive further updates.
+
 Unity build/test/activation implementation logic, invoked by [`game-ci/cli`](https://github.com/game-ci/cli) and (eventually) by the thin-wrapper action repos (`unity-builder`, `unity-test-runner`, `unity-activate`).
 
 ## Why this repo exists
